@@ -1,0 +1,77 @@
+name: DPDeploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      targetEnvironment:
+        description: "Which environment to run against (prod | nonprod)"
+        required: false
+        type: choice
+        default: dev
+        options: 
+        - dev
+        - qa
+        - stage
+        - prod
+      package:
+        description: "deployment package name"
+        required: false
+        default: package.tar
+       
+
+jobs:
+  # This workflow contains a single job called "deployment"
+  deployment:
+    name: deploy to dp
+    runs-on: onprem-linux
+  
+    steps:
+      - name: Clean Workspace
+        if: always()
+        uses: AADependencies/workspace-cleanup-action@v1
+        
+      - uses: actions/checkout@v3.5.3
+        with:
+          ref: ${{ github.ref_name }}
+
+      - id: checkBranchAndEnv
+        shell: bash     
+        run: |
+            echo "user ${{ github.actor }} executed the flow";
+
+        
+      - name: executing remote ssh commands using password for stage
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 'edapps49.tul.aa.com,edapps50.pdc.aa.com'
+          username: ''
+          password: 'SECRETS.PWD'
+          port: 22
+          script: |
+            whoami
+            cd /opt/esoa/deploymentScripts/ha/CTDSB/scripts
+            ls -al
+
+      - name: executing remote ssh commands using password for prod PDC
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 'edappp74.pdc.aa.com'
+          username: ''
+          password: ""
+          port: 22
+          script: |
+            whoami
+            cd /opt/esoa/deploymentScripts/ha/CTDSB/scripts
+            ls -al
+
+      - name: executing remote ssh commands using password for prod CDC
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 'edappp75.tul.aa.com'
+          username: ''
+          password: ''
+          port: 22
+          script: |
+            whoami
+            cd /opt/esoa/deploymentScripts/ha/CTDSB/scripts
+            ls -al            
